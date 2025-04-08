@@ -1,14 +1,18 @@
 
 import React, { createContext, useState, useContext, useEffect } from 'react';
+import axios from 'axios';
 import { toast } from 'sonner';
+
+const API_URL = 'http://localhost:5000/api/users';
 
 type UserRole = 'seeker' | 'provider' | null;
 
 interface User {
-  id: string;
+  _id: string;
   name: string;
   email: string;
   role: UserRole;
+  token: string;
 }
 
 interface AuthContextType {
@@ -43,88 +47,55 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const login = async (email: string, password: string) => {
     try {
-      // This would be replaced with actual MongoDB API call
-      console.log('Logging in with:', email, password);
-      
-      // For demo purposes, simulate a login
-      // In a real app, you would validate credentials against MongoDB
-      if (email && password) {
-        // Simulate API call delay
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        
-        // Check if user exists in localStorage (our fake DB for now)
-        const allUsers = JSON.parse(localStorage.getItem('jobPortalUsers') || '[]');
-        const foundUser = allUsers.find((u: any) => u.email === email);
-        
-        if (foundUser && foundUser.password === password) {
-          const { password, ...userWithoutPassword } = foundUser;
-          setUser(userWithoutPassword);
-          setIsAuthenticated(true);
-          localStorage.setItem('jobPortalUser', JSON.stringify(userWithoutPassword));
-          toast.success('Login successful!');
-        } else {
-          toast.error('Invalid email or password');
-          throw new Error('Invalid email or password');
-        }
-      } else {
-        toast.error('Please provide email and password');
-        throw new Error('Please provide email and password');
-      }
-    } catch (error) {
-      console.error('Login error:', error);
-      toast.error('Login failed. Please try again.');
-      throw error;
+      const config = {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      };
+
+      const { data } = await axios.post(
+        `${API_URL}/login`,
+        { email, password },
+        config
+      );
+
+      setUser(data);
+      setIsAuthenticated(true);
+      localStorage.setItem('jobPortalUser', JSON.stringify(data));
+      toast.success('Login successful!');
+    } catch (error: any) {
+      const errorMessage = error.response && error.response.data.message
+        ? error.response.data.message
+        : 'Login failed. Please try again.';
+      toast.error(errorMessage);
+      throw new Error(errorMessage);
     }
   };
 
   const register = async (name: string, email: string, password: string, role: UserRole) => {
     try {
-      // This would be replaced with actual MongoDB API call
-      console.log('Registering:', name, email, password, role);
-      
-      // For demo purposes, simulate registration
-      // In a real app, you would store this in MongoDB
-      if (name && email && password && role) {
-        // Simulate API call delay
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        
-        // Check if user already exists in localStorage
-        const allUsers = JSON.parse(localStorage.getItem('jobPortalUsers') || '[]');
-        const existingUser = allUsers.find((u: any) => u.email === email);
-        
-        if (existingUser) {
-          toast.error('User with this email already exists');
-          throw new Error('User already exists');
-        }
-        
-        const newUser = {
-          id: Date.now().toString(),
-          name,
-          email,
-          password, // In a real app, this would be hashed
-          role,
-          createdAt: new Date().toISOString()
-        };
-        
-        // Add to our "database"
-        allUsers.push(newUser);
-        localStorage.setItem('jobPortalUsers', JSON.stringify(allUsers));
-        
-        // Store user in state without password
-        const { password: _, ...userWithoutPassword } = newUser;
-        setUser(userWithoutPassword);
-        setIsAuthenticated(true);
-        localStorage.setItem('jobPortalUser', JSON.stringify(userWithoutPassword));
-        
-        toast.success('Registration successful!');
-      } else {
-        toast.error('Please fill in all required fields');
-        throw new Error('Missing required fields');
-      }
-    } catch (error) {
-      console.error('Registration error:', error);
-      toast.error('Registration failed. Please try again.');
-      throw error;
+      const config = {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      };
+
+      const { data } = await axios.post(
+        `${API_URL}/register`,
+        { name, email, password, role },
+        config
+      );
+
+      setUser(data);
+      setIsAuthenticated(true);
+      localStorage.setItem('jobPortalUser', JSON.stringify(data));
+      toast.success('Registration successful!');
+    } catch (error: any) {
+      const errorMessage = error.response && error.response.data.message
+        ? error.response.data.message
+        : 'Registration failed. Please try again.';
+      toast.error(errorMessage);
+      throw new Error(errorMessage);
     }
   };
 

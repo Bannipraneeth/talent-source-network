@@ -1,6 +1,10 @@
 
+import axios from 'axios';
+
+const API_URL = 'http://localhost:5000/api';
+
 export interface Job {
-  id: string;
+  _id: string;
   title: string;
   company: string;
   location: string;
@@ -14,88 +18,76 @@ export interface Job {
   createdAt: string;
 }
 
-// In a real app, these functions would make API calls to MongoDB
-// For now, we'll use localStorage as a mock database
+// Configure axios with auth token
+const configureAxios = () => {
+  const user = localStorage.getItem('jobPortalUser');
+  const token = user ? JSON.parse(user).token : null;
+  
+  return {
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: token ? `Bearer ${token}` : '',
+    },
+  };
+};
 
-const getJobs = (): Job[] => {
+const getJobs = async (): Promise<Job[]> => {
   try {
-    const jobs = localStorage.getItem('jobPortalJobs');
-    return jobs ? JSON.parse(jobs) : [];
+    const { data } = await axios.get(`${API_URL}/jobs`);
+    return data;
   } catch (error) {
     console.error('Failed to get jobs:', error);
     return [];
   }
 };
 
-const getJobById = (id: string): Job | null => {
+const getJobById = async (id: string): Promise<Job | null> => {
   try {
-    const jobs = getJobs();
-    return jobs.find(job => job.id === id) || null;
+    const { data } = await axios.get(`${API_URL}/jobs/${id}`);
+    return data;
   } catch (error) {
     console.error('Failed to get job:', error);
     return null;
   }
 };
 
-const getJobsByProvider = (providerId: string): Job[] => {
+const getJobsByProvider = async (): Promise<Job[]> => {
   try {
-    const jobs = getJobs();
-    return jobs.filter(job => job.providerId === providerId);
+    const config = configureAxios();
+    const { data } = await axios.get(`${API_URL}/jobs/provider`, config);
+    return data;
   } catch (error) {
     console.error('Failed to get provider jobs:', error);
     return [];
   }
 };
 
-const createJob = (job: Omit<Job, 'id' | 'createdAt'>): Job => {
+const createJob = async (job: Omit<Job, '_id' | 'createdAt' | 'providerId' | 'providerName' | 'providerEmail'>): Promise<Job> => {
   try {
-    const newJob: Job = {
-      ...job,
-      id: Date.now().toString(),
-      createdAt: new Date().toISOString()
-    };
-    
-    const jobs = getJobs();
-    jobs.push(newJob);
-    localStorage.setItem('jobPortalJobs', JSON.stringify(jobs));
-    
-    return newJob;
+    const config = configureAxios();
+    const { data } = await axios.post(`${API_URL}/jobs`, job, config);
+    return data;
   } catch (error) {
     console.error('Failed to create job:', error);
     throw new Error('Failed to create job');
   }
 };
 
-const updateJob = (id: string, updatedJob: Partial<Job>): Job => {
+const updateJob = async (id: string, updatedJob: Partial<Job>): Promise<Job> => {
   try {
-    const jobs = getJobs();
-    const index = jobs.findIndex(job => job.id === id);
-    
-    if (index === -1) {
-      throw new Error('Job not found');
-    }
-    
-    const updated = { ...jobs[index], ...updatedJob };
-    jobs[index] = updated;
-    localStorage.setItem('jobPortalJobs', JSON.stringify(jobs));
-    
-    return updated;
+    const config = configureAxios();
+    const { data } = await axios.put(`${API_URL}/jobs/${id}`, updatedJob, config);
+    return data;
   } catch (error) {
     console.error('Failed to update job:', error);
     throw new Error('Failed to update job');
   }
 };
 
-const deleteJob = (id: string): boolean => {
+const deleteJob = async (id: string): Promise<boolean> => {
   try {
-    const jobs = getJobs();
-    const filtered = jobs.filter(job => job.id !== id);
-    
-    if (filtered.length === jobs.length) {
-      throw new Error('Job not found');
-    }
-    
-    localStorage.setItem('jobPortalJobs', JSON.stringify(filtered));
+    const config = configureAxios();
+    await axios.delete(`${API_URL}/jobs/${id}`, config);
     return true;
   } catch (error) {
     console.error('Failed to delete job:', error);

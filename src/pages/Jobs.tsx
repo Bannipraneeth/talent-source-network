@@ -150,7 +150,7 @@ const Jobs: React.FC = () => {
                       <SelectValue placeholder="Job Type" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">All Types</SelectItem>
+                      <SelectItem value="all-types">All Types</SelectItem>
                       <SelectItem value="full-time">Full-Time</SelectItem>
                       <SelectItem value="part-time">Part-Time</SelectItem>
                       <SelectItem value="contract">Contract</SelectItem>

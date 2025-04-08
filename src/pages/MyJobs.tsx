@@ -28,17 +28,21 @@ const MyJobs: React.FC = () => {
   const [jobToDelete, setJobToDelete] = useState<string | null>(null);
   
   useEffect(() => {
-    if (user) {
-      const providerJobs = jobService.getJobsByProvider(user.id);
-      setJobs(providerJobs);
-    }
+    const fetchJobs = async () => {
+      if (user) {
+        const providerJobs = await jobService.getJobsByProvider();
+        setJobs(providerJobs);
+      }
+    };
+    
+    fetchJobs();
   }, [user]);
   
-  const handleDeleteJob = () => {
+  const handleDeleteJob = async () => {
     if (jobToDelete) {
       try {
-        jobService.deleteJob(jobToDelete);
-        setJobs(jobs.filter(job => job.id !== jobToDelete));
+        await jobService.deleteJob(jobToDelete);
+        setJobs(jobs.filter(job => job._id !== jobToDelete));
         toast.success('Job deleted successfully');
       } catch (error) {
         console.error('Error deleting job:', error);
@@ -84,7 +88,7 @@ const MyJobs: React.FC = () => {
           {jobs.length > 0 ? (
             <div className="grid gap-6">
               {jobs.map((job) => (
-                <Card key={job.id} className="overflow-hidden hover:shadow-md transition-shadow">
+                <Card key={job._id} className="overflow-hidden hover:shadow-md transition-shadow">
                   <CardContent className="p-6">
                     <div className="flex flex-col md:flex-row justify-between gap-4">
                       <div>
@@ -118,13 +122,13 @@ const MyJobs: React.FC = () => {
                       </div>
                       
                       <div className="flex flex-col gap-2 md:text-right">
-                        <Link to={`/jobs/${job.id}`}>
+                        <Link to={`/jobs/${job._id}`}>
                           <Button variant="outline">
                             View
                           </Button>
                         </Link>
                         
-                        <Link to={`/edit-job/${job.id}`}>
+                        <Link to={`/edit-job/${job._id}`}>
                           <Button variant="outline" className="text-amber-600 border-amber-600 hover:bg-amber-50">
                             <PencilIcon className="h-4 w-4 mr-2" />
                             Edit
@@ -134,7 +138,7 @@ const MyJobs: React.FC = () => {
                         <Button 
                           variant="outline" 
                           className="text-red-600 border-red-600 hover:bg-red-50"
-                          onClick={() => setJobToDelete(job.id)}
+                          onClick={() => setJobToDelete(job._id)}
                         >
                           <TrashIcon className="h-4 w-4 mr-2" />
                           Delete

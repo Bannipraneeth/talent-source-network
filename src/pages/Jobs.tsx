@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardFooter } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Job, jobService } from '@/services/jobService';
@@ -13,86 +13,99 @@ import { BriefcaseIcon, MapPinIcon, SearchIcon } from 'lucide-react';
 const Jobs: React.FC = () => {
   const [jobs, setJobs] = useState<Job[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedType, setSelectedType] = useState<string>('');
+  const [selectedType, setSelectedType] = useState<string>('all-types');
   
   useEffect(() => {
     // Fetch jobs from our service
-    const allJobs = jobService.getJobs();
-    setJobs(allJobs);
+    const fetchJobs = async () => {
+      const allJobs = await jobService.getJobs();
+      setJobs(allJobs);
+      
+      // If this is the first load and there are no jobs, add some sample jobs
+      if (allJobs.length === 0) {
+        const sampleJobs: Omit<Job, '_id' | 'createdAt'>[] = [
+          {
+            title: 'Frontend Developer',
+            company: 'TechCorp',
+            location: 'New York, NY',
+            description: 'We are looking for a skilled Frontend Developer to join our team...',
+            requirements: 'HTML, CSS, JavaScript, React, 2+ years of experience',
+            salary: '$80,000 - $100,000',
+            type: 'full-time',
+            providerId: 'sample1',
+            providerName: 'Sarah Johnson',
+            providerEmail: 'sarah@techcorp.com'
+          },
+          {
+            title: 'UX Designer',
+            company: 'DesignHub',
+            location: 'San Francisco, CA',
+            description: 'DesignHub is seeking a creative UX Designer to help create amazing user experiences...',
+            requirements: 'Figma, Adobe XD, user research, wireframing, 3+ years of experience',
+            salary: '$90,000 - $120,000',
+            type: 'full-time',
+            providerId: 'sample2',
+            providerName: 'Michael Chen',
+            providerEmail: 'michael@designhub.com'
+          },
+          {
+            title: 'Part-time Data Analyst',
+            company: 'DataWise',
+            location: 'Remote',
+            description: 'Looking for a data analyst to join our team on a part-time basis...',
+            requirements: 'SQL, Excel, Python, data visualization',
+            salary: '$40 - $50 per hour',
+            type: 'part-time',
+            providerId: 'sample3',
+            providerName: 'Emily Rodriguez',
+            providerEmail: 'emily@datawise.io'
+          },
+          {
+            title: 'DevOps Engineer',
+            company: 'CloudTech',
+            location: 'Austin, TX',
+            description: 'CloudTech is expanding our DevOps team to support our growing infrastructure...',
+            requirements: 'AWS, Docker, Kubernetes, CI/CD pipelines',
+            salary: '$110,000 - $140,000',
+            type: 'full-time',
+            providerId: 'sample4',
+            providerName: 'James Wilson',
+            providerEmail: 'james@cloudtech.com'
+          },
+          {
+            title: 'Marketing Intern',
+            company: 'GrowthLabs',
+            location: 'Chicago, IL',
+            description: 'Join our marketing team as an intern and gain valuable experience...',
+            requirements: 'Current marketing student, social media skills, analytics',
+            salary: '$20 per hour',
+            type: 'internship',
+            providerId: 'sample5',
+            providerName: 'Lisa Parker',
+            providerEmail: 'lisa@growthlabs.com'
+          }
+        ];
+        
+        // Add sample jobs to our database
+        const addSampleJobs = async () => {
+          for (const job of sampleJobs) {
+            try {
+              await jobService.createJob(job);
+            } catch (error) {
+              console.error('Error adding sample job:', error);
+            }
+          }
+          
+          // Fetch the updated jobs
+          const updatedJobs = await jobService.getJobs();
+          setJobs(updatedJobs);
+        };
+        
+        addSampleJobs();
+      }
+    };
     
-    // If this is the first load and there are no jobs, add some sample jobs
-    if (allJobs.length === 0) {
-      const sampleJobs: Omit<Job, 'id' | 'createdAt'>[] = [
-        {
-          title: 'Frontend Developer',
-          company: 'TechCorp',
-          location: 'New York, NY',
-          description: 'We are looking for a skilled Frontend Developer to join our team...',
-          requirements: 'HTML, CSS, JavaScript, React, 2+ years of experience',
-          salary: '$80,000 - $100,000',
-          type: 'full-time',
-          providerId: 'sample1',
-          providerName: 'Sarah Johnson',
-          providerEmail: 'sarah@techcorp.com'
-        },
-        {
-          title: 'UX Designer',
-          company: 'DesignHub',
-          location: 'San Francisco, CA',
-          description: 'DesignHub is seeking a creative UX Designer to help create amazing user experiences...',
-          requirements: 'Figma, Adobe XD, user research, wireframing, 3+ years of experience',
-          salary: '$90,000 - $120,000',
-          type: 'full-time',
-          providerId: 'sample2',
-          providerName: 'Michael Chen',
-          providerEmail: 'michael@designhub.com'
-        },
-        {
-          title: 'Part-time Data Analyst',
-          company: 'DataWise',
-          location: 'Remote',
-          description: 'Looking for a data analyst to join our team on a part-time basis...',
-          requirements: 'SQL, Excel, Python, data visualization',
-          salary: '$40 - $50 per hour',
-          type: 'part-time',
-          providerId: 'sample3',
-          providerName: 'Emily Rodriguez',
-          providerEmail: 'emily@datawise.io'
-        },
-        {
-          title: 'DevOps Engineer',
-          company: 'CloudTech',
-          location: 'Austin, TX',
-          description: 'CloudTech is expanding our DevOps team to support our growing infrastructure...',
-          requirements: 'AWS, Docker, Kubernetes, CI/CD pipelines',
-          salary: '$110,000 - $140,000',
-          type: 'full-time',
-          providerId: 'sample4',
-          providerName: 'James Wilson',
-          providerEmail: 'james@cloudtech.com'
-        },
-        {
-          title: 'Marketing Intern',
-          company: 'GrowthLabs',
-          location: 'Chicago, IL',
-          description: 'Join our marketing team as an intern and gain valuable experience...',
-          requirements: 'Current marketing student, social media skills, analytics',
-          salary: '$20 per hour',
-          type: 'internship',
-          providerId: 'sample5',
-          providerName: 'Lisa Parker',
-          providerEmail: 'lisa@growthlabs.com'
-        }
-      ];
-      
-      // Add sample jobs to our "database"
-      sampleJobs.forEach(job => {
-        jobService.createJob(job);
-      });
-      
-      // Fetch the updated jobs
-      setJobs(jobService.getJobs());
-    }
+    fetchJobs();
   }, []);
   
   const filteredJobs = jobs.filter(job => {
@@ -102,7 +115,7 @@ const Jobs: React.FC = () => {
       job.location.toLowerCase().includes(searchTerm.toLowerCase()) ||
       job.description.toLowerCase().includes(searchTerm.toLowerCase());
       
-    const matchesType = selectedType ? job.type === selectedType : true;
+    const matchesType = selectedType === 'all-types' ? true : job.type === selectedType;
     
     return matchesSearch && matchesType;
   });
@@ -179,7 +192,7 @@ const Jobs: React.FC = () => {
             {filteredJobs.length > 0 ? (
               <div className="grid gap-6">
                 {filteredJobs.map((job) => (
-                  <Card key={job.id} className="overflow-hidden hover:shadow-md transition-shadow">
+                  <Card key={job._id} className="overflow-hidden hover:shadow-md transition-shadow">
                     <CardContent className="p-6">
                       <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
                         <div>
@@ -210,7 +223,7 @@ const Jobs: React.FC = () => {
                         
                         <div className="md:text-right">
                           <p className="text-sm text-gray-500 mb-2">Posted by: {job.providerName}</p>
-                          <Link to={`/jobs/${job.id}`}>
+                          <Link to={`/jobs/${job._id}`}>
                             <Button variant="outline" className="text-job-primary border-job-primary hover:bg-job-primary hover:text-white">
                               View Details
                             </Button>

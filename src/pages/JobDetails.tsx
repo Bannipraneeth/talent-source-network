@@ -23,15 +23,19 @@ const JobDetails: React.FC = () => {
   const navigate = useNavigate();
   
   useEffect(() => {
-    if (id) {
-      const jobData = jobService.getJobById(id);
-      if (jobData) {
-        setJob(jobData);
-      } else {
-        navigate('/jobs');
-        toast.error('Job not found');
+    const fetchJob = async () => {
+      if (id) {
+        const jobData = await jobService.getJobById(id);
+        if (jobData) {
+          setJob(jobData);
+        } else {
+          navigate('/jobs');
+          toast.error('Job not found');
+        }
       }
-    }
+    };
+    
+    fetchJob();
   }, [id, navigate]);
   
   const handleContact = (e: React.FormEvent) => {

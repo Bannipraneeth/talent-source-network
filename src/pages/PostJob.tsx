@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -25,7 +24,7 @@ const PostJob: React.FC = () => {
   const [type, setType] = useState<'full-time' | 'part-time' | 'contract' | 'internship'>('full-time');
   const [loading, setLoading] = useState(false);
   
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!user) {
@@ -37,21 +36,18 @@ const PostJob: React.FC = () => {
     setLoading(true);
     
     try {
-      const newJob = jobService.createJob({
+      const newJob = await jobService.createJob({
         title,
         company,
         location,
         description,
         requirements,
         salary,
-        type,
-        providerId: user.id,
-        providerName: user.name,
-        providerEmail: user.email
+        type
       });
       
       toast.success('Job posted successfully!');
-      navigate(`/jobs/${newJob.id}`);
+      navigate(`/jobs/${newJob._id}`);
     } catch (error) {
       console.error('Error posting job:', error);
       toast.error('Failed to post job. Please try again.');
